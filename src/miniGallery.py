@@ -1,26 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from string import Template
-from PIL.ExifTags import TAGS
+import Image
 import base64
 import mimetypes
 import os
 import sys
-import Image
+from PIL.ExifTags import TAGS
 
-imgWidth=640
-imgHeight=480
+#======================================================================
+# CONFIG
+#======================================================================
+OutFileName = "gallerie.html"
 
-thumbWidth=160
-thumbHeight=120
+ImgWidth = 640
+ImgHeight = 480
 
-options = { }
-options["optimize"] = 1
-options["quality"] = 75
-options["progression"] = 1
+ThumbWidth = 160
+ThumbHeight = 120
+#======================================================================
+# END CONFIG
+#======================================================================
 
-outfile = '\
+lOutfile = '\
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">\n\
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr">\n\
     <head>\n\
@@ -28,58 +30,145 @@ outfile = '\
         <title>Gallerie</title>\n\
         <!-- CSS style -->\n\
         <style type="text/css">\n\
-            body {{ background-color: black; color: #00FF00; }}\n\
+            <!--\n\
+            body {{\n\
+                background-color: black;\n\
+                color: #00FF00;\n\
+                text-align: center;\n\
+            }}\n\
+\
             a {{ border: none 0px; color: #00FF00; }}\n\
-            img {{ border: dashed 2px #FF7500; margin: 5px; }}\n\
-            p {{ float: left; }}\n\
-            .thumb {{ margin : 2px; }}\n\
-            ul {{ list-style-type: circle; }}\n\
+\
+            a:hover {{\n\
+                background: #900;\n\
+                color: #FFF;\n\
+                text-decoration: none;\n\
+            }}\n\
+\
+            #page-container {{\n\
+            }}\n\
+\
+            .pg {{\n\
+                list-style: none none;\n\
+            }}\n\
+\
+            .pg:after {{\n\
+                clear: both;\n\
+                display: block;\n\
+                content: ".";\n\
+                height: 0;\n\
+                visibility: hidden;\n\
+            }}\n\
+\
+            .pg li {{\n\
+                list-style: none none;\n\
+                margin : 2px;\n\
+            }}\n\
+\
+            .pg li a {{\n\
+                margin: 4px;\n\
+                padding: 4px;\n\
+                position: relative;\n\
+                float: left;\n\
+                display: block;\n\
+                border: dashed 2px #FF7500;\n\
+                width: ' + str(ThumbWidth) + 'px;\n\
+                height: ' + str(ThumbHeight) + 'px;\n\
+            }}\n\
+\
+            .pg li a:hover {{\n\
+                font-size: 100%;\n\
+                z-index: 2;\n\
+            }}\n\
+\
+            .pg li a img {{\n\
+                border: 0 none;\n\
+                width: ' + str(ThumbWidth) + 'px;\n\
+                height: ' + str(ThumbHeight) + 'px;\n\
+            }}\n\
+\
+            .pg li a:hover img,.pg li a:active img,.pg li a:focus img {{\n\
+                width: ' + str(ThumbWidth * 2) + 'px;\n\
+                height: ' + str(ThumbHeight * 2) + 'px;\n\
+                left: -50px;\n\
+                top: -40px;\n\
+                z-index: 1;\n\
+            }}\n\
+            -->\n\
         </style>\n\
     </head>\n\
     <body>\n\
-        <div>\n\
+        <div id="page-container">\n\
+            <ul class="pg">\n\
 {listimg}\
+            </ul>\n\
         </div>\n\
     </body>\n\
 </html>'
 
 
-rep = sys.argv[1]
-imglist = ''
-for f in os.listdir(rep):
-    fullpath = os.path.join(rep, f)
-    if os.path.isfile(fullpath):
-        fic = open(fullpath, 'rb')
-        filetype = mimetypes.guess_type(fullpath)[0]
-        if filetype != None and filetype.startswith('image'):
+lDir = sys.argv[1]
+lImgList = ''
+for lFile in os.listdir(lDir):
+    lFullImagePath = os.path.join(lDir, lFile)
+    if os.path.isfile(lFullImagePath):
 
-            # Create thumbnail
-            im = Image.open(fullpath).convert('RGB')
-#            print('Name : ' + fullpath + ' - Mode : ' + im.mode)
-            im.thumbnail((imgWidth, imgHeight), Image.ANTIALIAS)
-            miniature = os.path.join(rep, f + '-mini.jpg')
-            im.save(miniature, 'JPEG', quality=75)
+        lFullImage = open(lFullImagePath, 'rb')
 
-            # TODO : Read exif data, and rotate img
-#def get_exif(fn):
-#ret = {}
-#i = Image.open(fn)
-#info = i._getexif()
-#for tag, value in info.items():
-#decoded = TAGS.get(tag, tag)
-#ret[decoded] = value
-#return ret
+        lFileType = mimetypes.guess_type(lFullImagePath)[0]
+        if lFileType != None and lFileType.startswith('image'):
 
-            # Base64 encoding
-#            print(miniature)
-            fmini = open(miniature, 'rb')
-            fdata = fmini.read()
-            data = base64.b64encode(fdata)
-            imglist += '            <p>'
-            imglist += '                <img src="data:' + filetype + ';base64,' + str(data) + '" width="' + str(thumbWidth) + '" height="' + str(thumbHeight)  + '" />\n'
-            imglist += '            </p>'
-            fmini.close()
-            os.remove(miniature)
-        fic.close()
+            lImage = Image.open(lFullImagePath).convert('RGB')
+#            print('Name : ' + lFullImagePath + ' - Mode : ' + lImage.mode)
 
-print(outfile.format(listimg=imglist))
+            # Reduce original image
+            lImage.thumbnail((ImgWidth, ImgHeight), Image.ANTIALIAS)
+            lImagePath = os.path.join(lDir, lFile + '-mini.jpg')
+            lImage.save(lImagePath, 'JPEG', quality = 75)
+            lImageFile = open(lImagePath, 'rb')
+            lImageData = lImageFile.read()
+            # Full image to base64
+            lImageEncoded = base64.b64encode(lImageData)
+
+            # Create a thumbnail
+            lImage.thumbnail((ThumbWidth, ThumbHeight), Image.ANTIALIAS)
+            lThumbPath = os.path.join(lDir, lFile + '-thumb.jpg')
+            lImage.save(lThumbPath, 'JPEG', quality = 75)
+            lThumbFile = open(lThumbPath, 'rb')
+            lThumbData = lThumbFile.read()
+            # Thumb to base64
+            lThumbEncoded = base64.b64encode(lThumbData)
+
+            # Read exif lThumbEncoded, and rotate img
+#           info = lImage._getexif()
+#            for tag, value in info.items():
+#                decoded = TAGS.get(tag, tag)
+#                print(value)
+
+            lImgList += '\
+                <li>\n\
+                    <a href="data:' + lFileType + ';base64,'\
+                        + str(lImageEncoded) + '">\n\
+                        <img src = "data:' + lFileType + ';base64,'\
+                            + str(lThumbEncoded) + '" alt="' + lFile + '" /> \n\
+                    </a>\n\
+                </li>\n'
+
+            # Close files
+            lThumbFile.close()
+            lImageFile.close()
+
+            # Kill temp thumb file
+            os.remove(lThumbPath)
+            os.remove(lImagePath)
+
+        # Close file
+        lFullImage.close()
+
+# Write html to file
+lCurrentDir = os.getcwd()
+lOutFilePath = os.path.join(lCurrentDir, OutFileName)
+print('File saved to ' + lOutFilePath)
+lOutFile = open(lOutFilePath, 'w')
+lOutFile.write(lOutfile.format(listimg = lImgList))
+lOutFile.close()
