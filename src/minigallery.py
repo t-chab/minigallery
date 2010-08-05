@@ -20,11 +20,9 @@ DEBUG = True
 
 OUT_FILE_NAME = "gallerie.html"
 
-IMG_WIDTH = 640
-IMG_HEIGHT = 480
+IMG_WIDTH = 840
+IMG_HEIGHT = 630
 
-THUMB_WIDTH = 160
-THUMB_HEIGHT = 120
 #======================================================================
 # END CONFIG
 #======================================================================
@@ -66,7 +64,7 @@ def fix_orientation(img, save_over = False):
     try:
         orientation = img._getexif()[EXIF_ORIENTATION_TAG]
     except TypeError:
-        raise ValueError("Image file has no EXIF data.")
+        raise ValueError("Image file has no EXIF orientation data.")
     if orientation in [3, 6, 8]:
         degrees = ORIENTATIONS[orientation][1]
         img = img.rotate(degrees)
@@ -93,84 +91,18 @@ if __name__ == "__main__":
         <head>\n\
             <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n\
             <title>Gallerie</title>\n\
-            <!-- CSS style -->\n\
-            <style type="text/css">\n\
-                <!--\n\
-                body {\n\
-                    background-color: black;\n\
-                    color: #00FF00;\n\
-                    text-align: center;\n\
-                }\n\
-    \
-                a { border: none 0px; color: #00FF00; }\n\
-    \
-                a:hover {\n\
-                    background: #900;\n\
-                    color: #FFF;\n\
-                    text-decoration: none;\n\
-                }\n\
-    \
-                #page-container {\n\
-                }\n\
-    \
-                .pg {\n\
-                    list-style: none none;\n\
-                }\n\
-    \
-                .pg:after {\n\
-                    clear: both;\n\
-                    display: block;\n\
-                    content: ".";\n\
-                    height: 0;\n\
-                    visibility: hidden;\n\
-                }\n\
-    \
-                .pg li {\n\
-                    list-style: none none;\n\
-                    margin : 2px;\n\
-                }\n\
-    \
-                .pg li a {\n\
-                    margin: 4px;\n\
-                    padding: 4px;\n\
-                    position: relative;\n\
-                    float: left;\n\
-                    display: block;\n\
-                    border: dashed 2px #FF7500;\n\
-                    width: ' + str(THUMB_WIDTH) + 'px;\n\
-                    height: ' + str(THUMB_HEIGHT) + 'px;\n\
-                }\n\
-    \
-                .pg li a:hover {\n\
-                    font-size: 100%;\n\
-                    z-index: 2;\n\
-                }\n\
-    \
-                .pg li a img {\n\
-                    border: 0 none;\n\
-                    width: ' + str(THUMB_WIDTH) + 'px;\n\
-                    height: ' + str(THUMB_HEIGHT) + 'px;\n\
-                }\n\
-    \
-                .pg li a:hover img,.pg li a:active img,.pg li a:focus img {\n\
-                    width: ' + str(THUMB_WIDTH * 2) + 'px;\n\
-                    height: ' + str(THUMB_HEIGHT * 2) + 'px;\n\
-                    left: -50px;\n\
-                    top: -40px;\n\
-                    z-index: 1;\n\
-                }\n\
-                -->\n\
-            </style>\n\
+            <!-- Galleria is a GPLv3 script available from http://galleria.aino.se/ -->\n\
+            <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>\n\
+            <script src="http://github.com/aino/galleria/raw/master/src/galleria.js"></script>\n\
+            <script src="http://github.com/aino/galleria/raw/master/src/themes/classic/galleria.classic.js"></script>\n\
         </head>\n\
         <body>\n\
-            <div id="page-container">\n\
-                <ul class="pg">\n\
-    %(listimg)\
-                </ul>\n\
+            <div id="images">\n\
+%(listimg)\
             </div>\n\
+            <script>$("#images").galleria();</script>\n\
         </body>\n\
     </html>'
-
 
     IMG_DIR = sys.argv[1]
     IMG_HTML_CODE = ''
@@ -179,9 +111,15 @@ if __name__ == "__main__":
         if os.path.isfile(lFullImagePath):
 
             lFullImage = open(lFullImagePath, 'rb')
-
             lFileType = mimetypes.guess_type(lFullImagePath)[0]
+
             if lFileType != None and lFileType.startswith('image'):
+                # Rotate from EXIF data
+                try:
+                    fix_orientation(lFullImagePath, True)
+                except ValueError:
+                    if(DEBUG):
+                        print('Image file has no EXIF data.')
 
                 lImage = Image.open(lFullImagePath).convert('RGB')
                 if(DEBUG):
@@ -191,51 +129,25 @@ if __name__ == "__main__":
                 # Reduce original image
                 lImage.thumbnail((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
                 lImagePath = os.path.join(IMG_DIR, lFile + '-mini.jpg')
-                lImage.save(lImagePath, 'JPEG', quality = 75)
 
-                # Rotate from EXIF data
-                try:
-                    fix_orientation(lImagePath, True)
-                except ValueError:
-                    if(DEBUG):
-                        print('Image file has no EXIF data.')
+                # Raise buffer size to avoid "Suspension not allowed" errors
+                # (see http://mail.python.org/pipermail/image-sig/1999-August/000816.html) 
+                lImage.MAXBLOCK = 1000000
+
+                lImage.save(lImagePath, 'JPEG', quality = 75)
 
                 lImageFile = open(lImagePath, 'rb')
                 lImageData = lImageFile.read()
                 # Full image to base64
                 lImageEncoded = base64.b64encode(lImageData)
 
-                # Create a thumbnail
-                lImage.thumbnail((THUMB_WIDTH, THUMB_HEIGHT), Image.ANTIALIAS)
-                lThumbPath = os.path.join(IMG_DIR, lFile + '-thumb.jpg')
-                lImage.save(lThumbPath, 'JPEG', quality = 75)
-                lThumbFile = open(lThumbPath, 'rb')
-                lThumbData = lThumbFile.read()
-                # Thumb to base64
-                lThumbEncoded = base64.b64encode(lThumbData)
-
-                # Read exif lThumbEncoded, and rotate img
-    #           info = lImage._getexif()
-    #            for tag, value in info.items():
-    #                decoded = TAGS.get(tag, tag)
-    #                print(value)
-
                 IMG_HTML_CODE += '\
-                    <li>\n\
-                        <a href="data:' + lFileType + ';base64,'\
-                            + str(lImageEncoded) + '">\n\
-                            <img src = "data:' + lFileType + ';base64,'\
-                                + str(lThumbEncoded) + '" alt="'\
-                                + lFile + '" /> \n\
-                        </a>\n\
-                    </li>\n'
+                <img src="data:' + lFileType + ';base64,' + str(lImageEncoded) + '" alt="' + lFile + '" />\n'
 
-                # Close files
-                lThumbFile.close()
+                # Close file
                 lImageFile.close()
 
-                # Kill temp thumb file
-                os.remove(lThumbPath)
+                # Kill temp file
                 os.remove(lImagePath)
 
             # Close file
