@@ -64,7 +64,8 @@ def fix_orientation(img, save_over = False):
         raise ValueError("You can't use `save_over` when passing \
         an Image instance. Use a file path instead.")
     try:
-        orientation = img._getexif()[EXIF_ORIENTATION_TAG]
+        lexifinfo = img._getexif
+        orientation = lexifinfo[EXIF_ORIENTATION_TAG]
     except TypeError:
         raise ValueError("Image file has no EXIF orientation data.")
     if orientation in [3, 6, 8]:
@@ -95,15 +96,16 @@ if __name__ == "__main__":
             <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n\
             <title>Gallerie</title>\n\
             <!-- Galleria is a GPLv3 script available from http://galleria.aino.se/ -->\n\
-            <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>\n\
-            <script src="https://github.com/aino/galleria/raw/master/src/galleria.js"></script>\n\
-            <script src="https://github.com/aino/galleria/raw/master/src/themes/classic/galleria.classic.js"></script>\n\
+            <link rel="stylesheet" href="https://github.com/aino/galleria/raw/master/src/themes/classic/galleria.classic.css" />\n\
+            <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>\n\
+            <script type="text/javascript" src="https://github.com/aino/galleria/raw/master/src/galleria.js"></script>\n\
         </head>\n\
         <body>\n\
+            <script type="text/javascript">Galleria.loadTheme(\'https://github.com/aino/galleria/raw/master/src/themes/classic/galleria.classic.js\')</script>\n\
             <div id="images">\n\
 %(listimg)\
             </div>\n\
-            <script>$("#images").galleria();</script>\n\
+            <script type="text/javascript">$("#images").galleria();</script>\n\
         </body>\n\
     </html>'
 
@@ -143,12 +145,16 @@ if __name__ == "__main__":
 
                 lImageFile = open(lImagePath, 'rb')
                 lImageData = lImageFile.read()
+
+                lPilImage = Image.open(lImagePath)
+
                 # Full image to base64
                 lImageEncoded = base64.b64encode(lImageData)
 
                 IMG_HTML_CODE += '\
                 <img src="data:' + lFileType + ';base64,' + str(lImageEncoded) \
-                + '" alt="' + lFile + '" />\n'
+                + '" height="' + str(lPilImage.size[1]) + '" width="'\
+                + str(lPilImage.size[0]) + '" alt="' + lFile + '" />\n'
 
                 # Close file
                 lImageFile.close()
