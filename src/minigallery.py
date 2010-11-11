@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
 Takes one directory, and converts all images files into it to one 
@@ -22,6 +22,8 @@ OUT_FILE_NAME = "gallerie.html"
 
 IMG_WIDTH = 840
 IMG_HEIGHT = 630
+
+IMG_MAXBLOCK = 10000000
 
 #======================================================================
 # END CONFIG
@@ -70,6 +72,7 @@ def fix_orientation(img, save_over = False):
         img = img.rotate(degrees)
         if save_over and path is not None:
             try:
+                img.MAXBLOCK = IMG_MAXBLOCK
                 img.save(path, quality = 95, optimize = 1)
             except IOError:
                 # Try again, without optimization (PIL can't optimize an image
@@ -93,8 +96,8 @@ if __name__ == "__main__":
             <title>Gallerie</title>\n\
             <!-- Galleria is a GPLv3 script available from http://galleria.aino.se/ -->\n\
             <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>\n\
-            <script src="http://github.com/aino/galleria/raw/master/src/galleria.js"></script>\n\
-            <script src="http://github.com/aino/galleria/raw/master/src/themes/classic/galleria.classic.js"></script>\n\
+            <script src="https://github.com/aino/galleria/raw/master/src/galleria.js"></script>\n\
+            <script src="https://github.com/aino/galleria/raw/master/src/themes/classic/galleria.classic.js"></script>\n\
         </head>\n\
         <body>\n\
             <div id="images">\n\
@@ -131,8 +134,10 @@ if __name__ == "__main__":
                 lImagePath = os.path.join(IMG_DIR, lFile + '-mini.jpg')
 
                 # Raise buffer size to avoid "Suspension not allowed" errors
-                # (see http://mail.python.org/pipermail/image-sig/1999-August/000816.html) 
-                lImage.MAXBLOCK = 1000000
+                # (see 
+                # http://mail.python.org/pipermail
+                # /image-sig/1999-August/000816.html) 
+                lImage.MAXBLOCK = IMG_MAXBLOCK
 
                 lImage.save(lImagePath, 'JPEG', quality = 75)
 
@@ -142,7 +147,8 @@ if __name__ == "__main__":
                 lImageEncoded = base64.b64encode(lImageData)
 
                 IMG_HTML_CODE += '\
-                <img src="data:' + lFileType + ';base64,' + str(lImageEncoded) + '" alt="' + lFile + '" />\n'
+                <img src="data:' + lFileType + ';base64,' + str(lImageEncoded) \
+                + '" alt="' + lFile + '" />\n'
 
                 # Close file
                 lImageFile.close()
