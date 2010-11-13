@@ -102,7 +102,7 @@ if __name__ == "__main__":
         </head>\n\
         <body>\n\
             <script type="text/javascript">Galleria.loadTheme(\'https://github.com/aino/galleria/raw/master/src/themes/classic/galleria.classic.js\')</script>\n\
-            <div id="images">\n\
+            <div id="images" style="width: ' + IMG_WIDTH + 'px; height: ' + IMG_HEIGHT + 'px;">\n\
 %(listimg)\
             </div>\n\
             <script type="text/javascript">$("#images").galleria();</script>\n\
