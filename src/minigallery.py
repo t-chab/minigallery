@@ -20,8 +20,8 @@ DEBUG = True
 
 OUT_FILE_NAME = "gallerie.html"
 
-IMG_WIDTH = 840
-IMG_HEIGHT = 630
+IMG_WIDTH = 640
+IMG_HEIGHT = 480
 
 IMG_MAXBLOCK = 10000000
 
@@ -100,9 +100,11 @@ if __name__ == "__main__":
             <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>\n\
             <script type="text/javascript" src="https://github.com/aino/galleria/raw/master/src/galleria.js"></script>\n\
         </head>\n\
-        <body>\n\
+        <body style="background-color: black;">\n\
             <script type="text/javascript">Galleria.loadTheme(\'https://github.com/aino/galleria/raw/master/src/themes/classic/galleria.classic.js\')</script>\n\
-            <div id="images" style="width: ' + IMG_WIDTH + 'px; height: ' + IMG_HEIGHT + 'px;">\n\
+            <div id="images" style="width: ' + str(IMG_WIDTH) + 'px; height: '\
+                + str(IMG_HEIGHT) + 'px; margin-left: auto; \
+                margin-right: auto;">\n\
 %(listimg)\
             </div>\n\
             <script type="text/javascript">$("#images").galleria();</script>\n\
