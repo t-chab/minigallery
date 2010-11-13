@@ -20,8 +20,10 @@ DEBUG = True
 
 OUT_FILE_NAME = "gallerie.html"
 
-IMG_WIDTH = 640
-IMG_HEIGHT = 480
+IMG_WIDTH = 840
+IMG_HEIGHT = 630
+
+IMG_QUALITY = 75
 
 IMG_MAXBLOCK = 10000000
 
@@ -143,7 +145,7 @@ if __name__ == "__main__":
                 # /image-sig/1999-August/000816.html) 
                 lImage.MAXBLOCK = IMG_MAXBLOCK
 
-                lImage.save(lImagePath, 'JPEG', quality = 75)
+                lImage.save(lImagePath, 'JPEG', quality = IMG_QUALITY)
 
                 lImageFile = open(lImagePath, 'rb')
                 lImageData = lImageFile.read()
