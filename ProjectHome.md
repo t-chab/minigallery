@@ -1,0 +1,1 @@
+This python script takes one directory as argument. It parses the directory for images files and merges them into one single html page which can be displayed as gallery.
